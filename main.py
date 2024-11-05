@@ -7,10 +7,6 @@ from PIL import Image, ImageTk
 from io import BytesIO
 
 
-icons_crypt = {'Bitcoin': '1/standard/bitcoin.png?1696501400', 'Ethereum': '279/standard/ethereum.png?1696501628',
-         'Litecoin': '2/standard/litecoin.png?1696501400', 'Tether': '325/standard/Tether.png?1696501661',
-         'Solana': '4128/standard/solana.png?1718769756', 'Dogecoin': '5/standard/dogecoin.png?1696501409'}
-
 cryptocurrency = {'Bitcoin': 'Биткоин', 'Ethereum': 'Эфириум', 'Litecoin': 'Лайткоин', 'Tether': 'Тезер',
                   'Solana': 'Солана', 'Dogecoin': 'Догекоин'}
 
@@ -19,8 +15,8 @@ traded_currency = {'USD': 'Доллар США', 'EUR': 'Евро', 'RUB': 'Ро
             'CHF': 'Швейцарский франк', 'CNY': 'Китайский юань'}
 
 date = datetime.date.today().strftime('%d.%m.%Y')
-crypt = None
-currency = None
+crypt = ''
+currency = ''
 
 def convert_currency():
     global crypt, currency
@@ -51,23 +47,28 @@ def convert_currency():
 
 
 def load_icon():
+    label_icon.config(image='')
     if crypt and currency:
-        icon_crypt = icons_crypt[crypt]
-        icon_url = f'https://assets.coingecko.com/coins/images/{icon_crypt}'
-
         try:
-            response = requests.get(icon_url)
+            response = requests.get(f"https://api.coingecko.com/api/v3/coins/{crypt.lower()}")
             response.raise_for_status()
-            image_data = BytesIO(response.content)
-            img = Image.open(image_data)
-            img.thumbnail((100, 100), Image.Resampling.LANCZOS)
-            img = ImageTk.PhotoImage(img)
-            if img:
-                return img
-            else:
-                return None
+            data_json = response.json()
+            icon_url = data_json['image']['small']
+            try:
+                response = requests.get(icon_url)
+                response.raise_for_status()
+                image_data = BytesIO(response.content)
+                img = Image.open(image_data)
+                img = ImageTk.PhotoImage(img)
+                if img:
+                    return img
+                else:
+                    return None
+            except Exception as e:
+                mb.showerror('Ошибка!', f'Ошибка загрузки иконки: {e}')
         except Exception as e:
-            mb.showerror('Ошибка!', f'Ошибка загрузки иконки: {e}')
+            mb.showerror('Ошибка!', f'Ошибка: {e}')
+
 
 
 def output_result():
